@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary # If using PostgreSQL, otherwise python-dotenv for .env
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+alembic # For database migrations (optional but recommended)
+pydantic[email]
+python-multipart
+# Pillow # For image validation/processing if needed beyond simple storage
