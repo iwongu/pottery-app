@@ -5,6 +5,9 @@ from datetime import datetime
 # User Schemas
 class UserBase(BaseModel):
     email: EmailStr
+    name: Optional[str] = None
+    bio: Optional[str] = None
+    profile_photo_filename: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -17,18 +20,28 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    bio: Optional[str] = None
+    profile_photo_filename: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 # Post Schemas
 class PostBase(BaseModel):
-    title: str
+    title: Optional[str] = None # Made title optional for updates
     text_content: Optional[str] = None
+    is_showcased: Optional[bool] = None
 
 class PostCreate(PostBase):
-    pass
+    title: str # Title is mandatory for creation
 
-class PostUpdate(PostBase):
+class PostUpdate(PostBase): # Inherits optional title and text_content
     pass
 
 class Post(PostBase):
+    title: str # Title is mandatory for displaying a post
     id: int
     owner_id: int
     image_filename: Optional[str] = None
@@ -36,6 +49,7 @@ class Post(PostBase):
     updated_at: Optional[datetime] = None
     owner: User # To show owner details
     like_count: int = 0 # Will be computed
+    is_showcased: bool # Ensure it's in the response, not optional here
     # comments: List['Comment'] = [] # Avoid circular dependency if Comment includes Post
 
     class Config:

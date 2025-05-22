@@ -17,8 +17,24 @@ router = APIRouter(
     tags=["posts"],
 )
 
-UPLOADS_DIR = Path(settings.UPLOADS_DIR)
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True) # Ensure directory exists
+# General directory for all uploads, defined from settings
+BASE_UPLOADS_DIR = Path(settings.UPLOADS_DIR)
+BASE_UPLOADS_DIR.mkdir(parents=True, exist_ok=True) # Ensure base directory exists
+
+# Specific directory for post images
+POST_IMAGES_UPLOAD_DIR = BASE_UPLOADS_DIR / "post_images"
+POST_IMAGES_UPLOAD_DIR.mkdir(parents=True, exist_ok=True) # Ensure post images directory exists
+
+def _delete_image_file(image_filename: Optional[str], base_path: Path):
+    if image_filename:
+        file_path = base_path / image_filename
+        try:
+            if file_path.is_file():
+                file_path.unlink()
+        except Exception as e:
+            # Log this error, e.g., print(f"Error deleting file {file_path}: {e}")
+            # Depending on policy, you might raise an HTTP exception or just log
+            pass 
 
 @router.post("/", response_model=schemas.Post)
 async def create_new_post(
@@ -42,7 +58,7 @@ async def create_new_post(
         # Generate a unique filename to prevent overwrites and ensure security
         extension = Path(image.filename).suffix
         unique_filename = f"{uuid.uuid4()}{extension}"
-        image_path = UPLOADS_DIR / unique_filename
+        image_path = POST_IMAGES_UPLOAD_DIR / unique_filename # Use specific post images dir
 
         try:
             with image_path.open("wb") as buffer:
@@ -57,6 +73,92 @@ async def create_new_post(
     post_create = schemas.PostCreate(title=title, text_content=text_content)
     db_post = crud.create_post(db=db, post=post_create, owner_id=current_user.id, image_filename=image_filename_on_disk)
     return crud.enrich_post_with_like_count(db, db_post)
+
+
+@router.put("/{post_id}", response_model=schemas.Post)
+async def update_existing_post(
+    post_id: int,
+    title: Optional[str] = Form(None),
+    text_content: Optional[str] = Form(None),
+    remove_image: bool = Form(False),
+    image: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db_post = crud.get_post(db, post_id=post_id)
+    if not db_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    if db_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this post")
+
+    old_image_filename = db_post.image_filename
+    new_image_filename_for_crud = None
+    clear_existing_image_for_crud = False
+
+    if image and image.filename:
+        if not image.content_type or not image.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Uploaded file is not an image.")
+        
+        extension = Path(image.filename).suffix.lower()
+        allowed_extensions = {".jpg", ".jpeg", ".png", ".gif"}
+        if extension not in allowed_extensions:
+            raise HTTPException(status_code=400, detail=f"Invalid file extension. Allowed: {', '.join(allowed_extensions)}")
+
+        unique_filename = f"{uuid.uuid4()}{extension}"
+        image_path = POST_IMAGES_UPLOAD_DIR / unique_filename
+        try:
+            with image_path.open("wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+            new_image_filename_for_crud = unique_filename
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Could not save new image: {e}")
+        finally:
+            image.file.close()
+    elif remove_image:
+        clear_existing_image_for_crud = True
+
+    update_data_dict = {}
+    if title is not None:
+        update_data_dict["title"] = title
+    if text_content is not None:
+        update_data_dict["text_content"] = text_content
+    
+    post_update_schema = schemas.PostUpdate(**update_data_dict)
+
+    updated_db_post = crud.update_post(
+        db=db, 
+        db_post=db_post, 
+        post_in=post_update_schema, 
+        new_image_filename=new_image_filename_for_crud,
+        clear_existing_image=clear_existing_image_for_crud
+    )
+
+    # Delete old image if a new one was uploaded or if removal was requested
+    if new_image_filename_for_crud and old_image_filename:
+        _delete_image_file(old_image_filename, POST_IMAGES_UPLOAD_DIR)
+    elif clear_existing_image_for_crud and old_image_filename:
+        _delete_image_file(old_image_filename, POST_IMAGES_UPLOAD_DIR)
+        
+    return crud.enrich_post_with_like_count(db, updated_db_post)
+
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_existing_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db_post = crud.get_post(db, post_id=post_id)
+    if not db_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    if db_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this post")
+
+    image_filename_to_delete = crud.delete_post(db=db, db_post=db_post) # crud.delete_post now returns filename
+
+    if image_filename_to_delete:
+        _delete_image_file(image_filename_to_delete, POST_IMAGES_UPLOAD_DIR)
+    
+    return None # FastAPI returns 204 for None with this status code
 
 
 @router.get("/", response_model=List[schemas.Post])
@@ -118,4 +220,47 @@ def unlike_post(
     return None # FastAPI will return 204 No Content
 
 # Add similar endpoints for comments: POST /{post_id}/comments, GET /{post_id}/comments, DELETE /comments/{comment_id}
-# Add PUT and DELETE for posts, ensuring ownership.
+# Add PUT and DELETE for posts, ensuring ownership. - DONE
+
+@router.post("/{post_id}/showcase", response_model=schemas.Post)
+async def showcase_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db_post = crud.get_post(db, post_id=post_id)
+    if not db_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    if db_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to showcase this post")
+
+    if db_post.is_showcased:
+        # Optionally, could return 200 OK with the current post if already showcased
+        # Or raise HTTPException(status_code=400, detail="Post is already showcased")
+        # For now, let's just ensure it's set and return the post
+        pass
+
+    post_update_schema = schemas.PostUpdate(is_showcased=True)
+    updated_db_post = crud.update_post(db=db, db_post=db_post, post_in=post_update_schema)
+    return crud.enrich_post_with_like_count(db, updated_db_post)
+
+@router.delete("/{post_id}/showcase", response_model=schemas.Post)
+async def unshowcase_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db_post = crud.get_post(db, post_id=post_id)
+    if not db_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    if db_post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to unshowcase this post")
+
+    if not db_post.is_showcased:
+        # Optionally, could return 200 OK if already not showcased
+        # Or raise HTTPException(status_code=400, detail="Post is not currently showcased")
+        pass
+        
+    post_update_schema = schemas.PostUpdate(is_showcased=False)
+    updated_db_post = crud.update_post(db=db, db_post=db_post, post_in=post_update_schema)
+    return crud.enrich_post_with_like_count(db, updated_db_post)
