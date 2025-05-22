@@ -1,0 +1,48 @@
+/* In UserPage.module.css */
+.userPageContainer {
+  padding: 20px;
+}
+
+.postsSection {
+  margin-top: 30px;
+}
+
+.postsSection h2 { /* Styling for h2 within .postsSection */
+  margin-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 5px;
+}
+
+.postsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.editProfileButton {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.editProfileButton:hover {
+  background-color: #0056b3;
+}
+
+.errorMessage { /* For general error messages on the page */
+    color: red;
+    padding: 10px;
+    border: 1px solid red;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.loadingMessage, .infoMessage { /* For loading or "no posts" messages */
+    padding: 10px;
+    margin-bottom: 20px;
+    color: #555;
+}

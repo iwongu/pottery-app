@@ -1,0 +1,31 @@
+/* In ProfileDisplay.module.css */
+.profileDisplay {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.profilePictureContainer {
+  margin-right: 20px;
+}
+
+.profilePicture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profileInfo h2 { /* Styling for h2 within .profileInfo */
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.profileInfo .bio { /* Styling for .bio within .profileInfo */
+  font-size: 0.9em;
+  color: #555;
+  white-space: pre-wrap; /* Respect newlines in bio */
+}

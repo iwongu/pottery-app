@@ -6,6 +6,7 @@ import postService from '../services/postService';
 import ProfileDisplay from '../components/ProfileDisplay';
 import UserPostCard from '../components/Post/UserPostCard';
 import { UserProfile, Post } from '../types';
+import styles from './UserPage.module.css'; // Import CSS Module
 
 const UserPage: React.FC = () => {
   const { userId: routeUserId } = useParams<{ userId: string }>(); // userId from route params
@@ -94,44 +95,38 @@ const UserPage: React.FC = () => {
   };
 
   const handleEditPost = (postId: string) => {
-    // Navigate to an edit post page (this page needs to be created)
-    // For now, we'll assume a route like /edit-post/:postId
     navigate(`/edit-post/${postId}`); 
-    // Or if you have a modal for editing, trigger it here.
   };
 
   if (isLoading) {
-    return <p>Loading user profile...</p>;
+    return <p className={styles.loadingMessage}>Loading user profile...</p>;
   }
 
   if (error) {
-    return <p style={{ color: 'red' }}>Error: {error}</p>;
+    return <p className={styles.errorMessage}>Error: {error}</p>;
   }
 
   if (!profile) {
-    return <p>User not found.</p>;
+    return <p className={styles.infoMessage}>User not found.</p>;
   }
 
-  // Filter out showcased posts from the "All Posts" list to avoid duplication if desired
-  // Or, display all and let the card show its status.
-  // For this example, let's filter them out from the "All Posts" list.
   const showcasedPostIds = new Set(showcasedPosts.map(p => p.id));
   const nonShowcasedUserPosts = userPosts.filter(p => !showcasedPostIds.has(p.id));
 
   return (
-    <div className="user-page-container">
+    <div className={styles.userPageContainer}>
       <ProfileDisplay user={profile} />
       
       {isCurrentUserProfile && token && (
-        <Link to="/users/me/edit" className="edit-profile-button" style={{display: 'inline-block', marginBottom: '20px', padding: '10px 15px', backgroundColor: '#007bff', color: 'white', textDecoration: 'none', borderRadius: '5px' }}>
+        <Link to="/users/me/edit" className={styles.editProfileButton}>
           Edit Profile
         </Link>
       )}
 
-      <section className="posts-section">
+      <section className={styles.postsSection}>
         <h2>Showcased Posts</h2>
         {showcasedPosts.length > 0 ? (
-          <div className="posts-grid">
+          <div className={styles.postsGrid}>
             {showcasedPosts.map(post => (
               <UserPostCard
                 key={`showcased-${post.id}`}
@@ -139,19 +134,19 @@ const UserPage: React.FC = () => {
                 isOwner={isCurrentUserProfile}
                 onDelete={handleDeletePost}
                 onToggleShowcase={handleToggleShowcase}
-                onEdit={isCurrentUserProfile ? handleEditPost : undefined} // Only pass onEdit if owner
+                onEdit={isCurrentUserProfile ? handleEditPost : undefined}
               />
             ))}
           </div>
         ) : (
-          <p>This user hasn't showcased any posts yet.</p>
+          <p className={styles.infoMessage}>This user hasn't showcased any posts yet.</p>
         )}
       </section>
 
-      <section className="posts-section">
+      <section className={styles.postsSection}>
         <h2>All Posts by {profile.name || 'User'}</h2>
         {nonShowcasedUserPosts.length > 0 ? (
-          <div className="posts-grid">
+          <div className={styles.postsGrid}>
             {nonShowcasedUserPosts.map(post => (
               <UserPostCard
                 key={`userpost-${post.id}`}
@@ -164,47 +159,9 @@ const UserPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <p>This user hasn't created any other posts yet.</p>
+          <p className={styles.infoMessage}>This user hasn't created any other posts yet.</p>
         )}
-        {/* If userPosts was not filtered, and showcased posts are also in userPosts: */}
-        {/* {userPosts.length > 0 ? (
-          <div className="posts-grid">
-            {userPosts.map(post => (
-              <UserPostCard
-                key={post.id}
-                post={post}
-                isOwner={isCurrentUserProfile}
-                onDelete={handleDeletePost}
-                onToggleShowcase={handleToggleShowcase}
-                onEdit={handleEditPost}
-              />
-            ))}
-          </div>
-        ) : (
-          <p>This user has no posts.</p>
-        )} */}
       </section>
-      <style jsx>{`
-        .user-page-container {
-          padding: 20px;
-        }
-        .posts-section {
-          margin-top: 30px;
-        }
-        .posts-section h2 {
-          margin-bottom: 15px;
-          border-bottom: 2px solid #eee;
-          padding-bottom: 5px;
-        }
-        .posts-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 20px;
-        }
-        .edit-profile-button { /* Example style */
-          /* styles already applied inline for simplicity */
-        }
-      `}</style>
     </div>
   );
 };

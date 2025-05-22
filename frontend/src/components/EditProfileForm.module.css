@@ -1,0 +1,73 @@
+/* In EditProfileForm.module.css */
+.editProfileForm {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.formGroup {
+  margin-bottom: 15px;
+}
+
+.formGroup label { /* Labels within formGroup will inherit this if not overridden by a more specific class */
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+/* Specific classes for input types for robustness */
+.textInput,
+.textareaInput,
+.fileInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box; /* Ensures padding doesn't affect overall width */
+}
+
+.textareaInput {
+  resize: vertical;
+}
+
+.checkboxInput {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.photoPreview {
+  margin-bottom: 10px;
+}
+
+.photoPreview img { /* Styling for the image within the preview div */
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.submitButton {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.submitButton:disabled {
+  background-color: #aaa;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.errorMessage {
+  color: red;
+  margin-bottom: 15px;
+}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { UserProfile } from '../../types'; // Assuming UserProfile includes profile_photo_url
+import { UserProfile } from '../../types'; 
+import styles from './EditProfileForm.module.css'; // Import CSS Module
 
 interface EditProfileFormProps {
   currentUser: UserProfile; 
   onSubmit: (formData: FormData) => Promise<void>;
-  isLoading: boolean; // Changed from isSubmitting
-  error: string | null; // For displaying submission errors
+  isLoading: boolean; 
+  error: string | null; 
 }
 
 const EditProfileForm: React.FC<EditProfileFormProps> = ({ currentUser, onSubmit, isLoading, error }) => {
@@ -83,10 +84,10 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ currentUser, onSubmit
   };
 
   return (
-    <form onSubmit={handleSubmit} className="edit-profile-form">
-      {error && <p className="error-message" style={{color: 'red'}}>{error}</p>}
+    <form onSubmit={handleSubmit} className={styles.editProfileForm}>
+      {error && <p className={styles.errorMessage}>{error}</p>}
       
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="name">Name</label>
         <input
           type="text"
@@ -94,10 +95,11 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ currentUser, onSubmit
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Your Name"
+          className={styles.textInput}
         />
       </div>
 
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="bio">Bio</label>
         <textarea
           id="bio"
@@ -105,14 +107,16 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ currentUser, onSubmit
           onChange={(e) => setBio(e.target.value)}
           placeholder="Tell us about yourself"
           rows={4}
+          className={styles.textareaInput}
         />
       </div>
 
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="profilePhoto">Profile Photo</label>
         {profilePhotoPreview && (
-          <div className="photo-preview">
-            <img src={profilePhotoPreview} alt="Profile preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%' }} />
+          <div className={styles.photoPreview}>
+            {/* The img style is handled by .photoPreview img in CSS module */}
+            <img src={profilePhotoPreview} alt="Profile preview" />
           </div>
         )}
         <input
@@ -120,87 +124,27 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ currentUser, onSubmit
           id="profilePhoto"
           accept="image/*"
           onChange={handlePhotoChange}
-          disabled={clearProfilePhoto} // Disable file input if "clear" is checked
+          disabled={clearProfilePhoto}
+          className={styles.fileInput}
         />
       </div>
 
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="clearProfilePhoto">
           <input
             type="checkbox"
             id="clearProfilePhoto"
             checked={clearProfilePhoto}
             onChange={handleClearPhotoChange}
+            className={styles.checkboxInput}
           />
           Remove profile photo
         </label>
       </div>
 
-      <button type="submit" disabled={isLoading} className="submit-button">
+      <button type="submit" disabled={isLoading} className={styles.submitButton}>
         {isLoading ? 'Saving...' : 'Save Profile'}
       </button>
-      <style jsx>{`
-        .edit-profile-form {
-          max-width: 500px;
-          margin: 20px auto;
-          padding: 20px;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          background-color: #f9f9f9;
-        }
-        .form-group {
-          margin-bottom: 15px;
-        }
-        .form-group label {
-          display: block;
-          margin-bottom: 5px;
-          font-weight: bold;
-        }
-        .form-group input[type="text"],
-        .form-group textarea,
-        .form-group input[type="file"],
-        .form-group input[type="checkbox"] {
-          /* General styling for inputs */
-        }
-        .form-group input[type="text"],
-        .form-group textarea,
-        .form-group input[type="file"] { /* Specific to block elements */
-          width: 100%;
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          box-sizing: border-box;
-        }
-        .form-group input[type="checkbox"] {
-           margin-right: 5px;
-           vertical-align: middle;
-        }
-        .form-group textarea {
-          resize: vertical;
-        }
-        .photo-preview {
-          margin-bottom: 10px;
-        }
-        .submit-button {
-          background-color: #007bff;
-          color: white;
-          padding: 10px 15px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 1em;
-        }
-        .submit-button:disabled {
-          background-color: #aaa;
-        }
-        .submit-button:hover:not(:disabled) {
-          background-color: #0056b3;
-        }
-        .error-message {
-          color: red;
-          margin-bottom: 15px;
-        }
-      `}</style>
     </form>
   );
 };
