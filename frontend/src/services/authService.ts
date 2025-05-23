@@ -7,7 +7,17 @@ interface AuthCredentials {
 }
 
 export const registerUser = async (credentials: AuthCredentials): Promise<User> => {
-    const response = await apiClient.post<User>('/auth/register', credentials);
+    // FastAPI often expects form data for user creation/authentication, similar to login
+    const formData = new URLSearchParams();
+    formData.append('email', credentials.email); // Assuming backend expects 'email' field
+    formData.append('username', credentials.email); // Assuming backend expects 'email' field
+    formData.append('password', credentials.password);
+
+    const response = await apiClient.post<User>('/auth/register', formData, {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    });
     return response.data;
 };
 
