@@ -18,6 +18,18 @@ async def read_users_me(current_user: models.User = Depends(get_current_user)):
     """
     return current_user
 
+@router.put("/me", response_model=schemas.User)
+async def update_user_me(
+    user_update: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Update current logged-in user.
+    """
+    updated_user = crud.update_user(db=db, db_user=current_user, user_in=user_update)
+    return updated_user
+
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = crud.get_user(db, user_id=user_id)

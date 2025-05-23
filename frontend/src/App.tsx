@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CreatePostPage from './pages/CreatePostPage';
+import UserProfilePage from './pages/UserProfilePage'; // Added import
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
   };
   return (
     <>
-      <nav style={{ padding: '1rem', background: '#f0f0f0', marginBottom: '1rem' }}>
+      <nav style={{ padding: '1rem', background: '#f0f0f0', marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
         <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
         {!token ? (
           <>
@@ -26,9 +27,12 @@ function App() {
             <Link to="/register" style={{ marginRight: '1rem' }}>Register</Link>
           </>
         ) : (
-          <button onClick={handleLogout} style={{ marginRight: '1rem' }}>Logout</button>
+          <>
+            <Link to="/profile" style={{ marginRight: '1rem' }}>Profile</Link>
+            <Link to="/create-post" style={{ marginRight: '1rem' }}>Create Post</Link>
+            <button onClick={handleLogout} style={{ marginLeft: 'auto' }}>Logout</button>
+          </>
         )}
-        {token && <Link to="/create-post" style={{ marginRight: '1rem' }}>Create Post</Link>}
       </nav>
       <div className="container" style={{ padding: '0 1rem' }}>
         <Routes>
@@ -38,6 +42,7 @@ function App() {
           {/*<Route path="/create-post" element={<CreatePostPage />} />*/}
            <Route element={<ProtectedRoute />}>
             <Route path="/create-post" element={<CreatePostPage />} />
+            <Route path="/profile" element={<UserProfilePage />} /> {/* Added route */}
             {/* Add other protected routes here */}
           </Route>          
           {/* Add more routes here as you build pages */}
