@@ -5,17 +5,24 @@ from datetime import datetime
 # User Schemas
 class UserBase(BaseModel):
     email: EmailStr
+    username: str
 
 class UserCreate(UserBase):
     password: str
 
 class User(UserBase):
     id: int
+    bio: Optional[str] = None
     created_at: datetime
     # provider: Optional[str] = None # For social login later
 
     class Config:
         from_attributes = True
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    bio: Optional[str] = None
 
 # Post Schemas
 class PostBase(BaseModel):

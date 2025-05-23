@@ -7,8 +7,10 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    bio = Column(Text, nullable=True)
     # For social sign-in later:
     # provider = Column(String, nullable=True) # e.g., 'google', 'facebook'
     # social_id = Column(String, nullable=True, unique=True, index=True)

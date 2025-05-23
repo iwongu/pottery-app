@@ -13,8 +13,26 @@ def get_user_by_email(db: Session, email: str):
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(email=user.email, hashed_password=hashed_password)
+    db_user = models.User(email=user.email, hashed_password=hashed_password, username=user.username)
     db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def update_user(db: Session, db_user: models.User, user_in: schemas.UserUpdate) -> models.User:
+    update_data = user_in.dict(exclude_unset=True)
+
+    if "username" in update_data:
+        db_user.username = update_data["username"]
+    
+    if "bio" in update_data:
+        db_user.bio = update_data["bio"]
+
+    if "password" in update_data and update_data["password"]: # Ensure password is not empty string
+        hashed_password = get_password_hash(update_data["password"])
+        db_user.hashed_password = hashed_password
+    
+    db.add(db_user) # Not strictly necessary if db_user is already in session and modified
     db.commit()
     db.refresh(db_user)
     return db_user
